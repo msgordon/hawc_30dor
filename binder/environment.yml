@@ -7,6 +7,7 @@ dependencies:
   - numpy
   - matplotlib
   - astropy
+  - scikit-image
   - scipy
   - ipywidgets
   - jupyter_contrib_nbextensions
