@@ -6,3 +6,6 @@ jupyter nbextension enable codefolding/edit
 
 # Notebooks w/ extensions that auto-run code must be "trusted" to work the first time
 jupyter trust HAWC_30Dor.ipynb
+
+# Install liccy with pip after conda dependencies
+pip install git+https://github.com/msgordon/liccy.git
