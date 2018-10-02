@@ -1,0 +1,1 @@
+python notebook_to_html.py HAWC_30Dor.v2.ipynb -t "SOFIA/HAWC+ 30Dor" --hw --hi --trim
