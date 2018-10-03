@@ -1,0 +1,12 @@
+.navbar-right {
+    padding-right: 200px !important;
+}
+
+.navbar-sofia {
+    background-color: #344860 !important;
+    border-color: #2b383e !important;
+}
+
+.navbar-sofia li:hover >a, a li a.active {
+    background-color: #3bb3e9 !important;
+}
