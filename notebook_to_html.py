@@ -11,11 +11,57 @@ HEAD = '''
 '''
 
 HEAD_REP = '''
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <!-- Bootswatch theme -->
 <link rel="stylesheet" href="bootstrap.min.css">
 
 <!-- Custom stylesheet, it must be in the same directory as the html file -->
 <link rel="stylesheet" href="custom.css">
+'''
+
+NAV = '''
+<nav class="navbar navbar-inverse navbar-sofia">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header" id="site-title-head">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="https://www.sofia.usra.edu/">
+        <img alt="SOFIA Science Center" src="https://www.sofia.usra.edu/sites/default/files/sofialogo-blkbg-trans.png">
+      </a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="navbar-collapse-1">
+      <ul class="nav navbar-nav navbar-left">
+        <li class="site-title" id="site-li-head">
+	  <a href="https://www.sofia.usra.edu">SOFIA Science Center</a>
+	  <a id="site-description" href="https://www.sofia.usra.edu">
+	    Stratospheric Observatory for Infrared Astronomy
+	  </a>
+	</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="https://www.sofia.usra.edu">Home</a></li>
+	<li><a href="https://www.sofia.usra.edu/science">For Researchers</a></li>
+	<li><a href="https://www.sofia.usra.edu/multimedia">Multimedia</a></li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container -->
+</nav>
+'''
+
+JSRC = '''
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+						    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+						    <!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 '''
 
 def trim_bytes(filestring):
@@ -53,16 +99,18 @@ def convert(notebook,outfile=None, title='Notebook',
         outfile = Path(notebook).with_suffix('.html')
 
     html_exporter = HTMLExporter()
-    #with open(notebook, 'r') as f:
+    
     nb = nbformat.read(notebook,as_version=nbformat.NO_CONVERT)
 
     (body,resources) = html_exporter.from_notebook_node(nb)
 
     body = body.replace(HEAD,HEAD_REP)
-    
 
     soup = BeautifulSoup(body, 'html.parser')
     soup.head.title.string = title
+
+    soup.find(id='notebook').insert_before(NAV)
+    soup.body.append(JSRC)
 
     if hide_warnings:
         for cell in soup.select('.output_stderr'):
@@ -76,6 +124,12 @@ def convert(notebook,outfile=None, title='Notebook',
     if trim:
         for cell in soup.select('.output_area .rendered_html img'):
             cell['src'] = trim_bytes(cell['src'])
+
+    # make img responsive
+    for cell in soup.select('.output_area .rendered_html img'):
+        cell['class'] = ['img-responsive', 'center-block']
+        del cell['width']
+        cell.find_parent('div').unwrap()
     
     with open(outfile, 'wb') as f:
         f.write(soup.encode(formatter=None))
