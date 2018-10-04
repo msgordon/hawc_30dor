@@ -4,6 +4,7 @@ from pathlib import Path
 from nbconvert import HTMLExporter
 import nbformat
 from bs4 import BeautifulSoup
+from copy import copy
 
 HEAD = '''
 <!-- Custom stylesheet, it must be in the same directory as the html file -->
@@ -19,6 +20,18 @@ HEAD_REP = '''
 
 <!-- Custom stylesheet, it must be in the same directory as the html file -->
 <link rel="stylesheet" href="custom.css">
+'''
+
+HEAD_REM = '''
+div.output_area .rendered_html img {
+  margin-left: 0;
+  margin-right: 0;
+}
+div.output_area img,
+div.output_area svg {
+  max-width: 100%;
+  height: auto;
+}
 '''
 
 NAV = '''
@@ -105,6 +118,7 @@ def convert(notebook,outfile=None, title='Notebook',
     (body,resources) = html_exporter.from_notebook_node(nb)
 
     body = body.replace(HEAD,HEAD_REP)
+    body = body.replace(HEAD_REM,'')
 
     soup = BeautifulSoup(body, 'html.parser')
     soup.head.title.string = title
@@ -128,8 +142,23 @@ def convert(notebook,outfile=None, title='Notebook',
     # make img responsive
     for cell in soup.select('.output_area .rendered_html img'):
         cell['class'] = ['img-responsive', 'center-block']
-        del cell['width']
-        cell.find_parent('div').unwrap()
+        #del cell['width']
+
+        # make this invisible on xs devices
+        divp = cell.find_parent('div')
+        divp['class'].append('hidden-xs')
+        divp['class'].append('visible-ms')
+
+        #prompt
+        prompt = divp.find_previous('div')
+        prompt['class'].append('hidden-xs')
+        prompt['class'].append('visible-ms')
+        
+        # add copy that only displays on xs devices
+        divp.insert_after(copy(cell))
+        newcell = cell.find_next('img')
+        newcell['class'] = ['img-responsive', 'center-block','visible-xs-block','hidden-ms']
+        del newcell['width']
     
     with open(outfile, 'wb') as f:
         f.write(soup.encode(formatter=None))
