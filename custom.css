@@ -154,11 +154,10 @@ button.navbar-toggle:hover {
 }
 */
 
-/*
-.img-responsive {
-    max-width: 80% !important;
+
+.hidden-xs > img.img-responsive {
+    max-width: 70% !important;
 }
-*/
 
 
 /* dropdown on hover */

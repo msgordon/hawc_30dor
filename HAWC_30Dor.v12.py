@@ -367,7 +367,7 @@ def make_polmap(filename, title=None, figure=None, subplot=(1,1,1)):
     
     # If title, set it
     if title:
-        fig.set_title(title)
+        fig.set_title(title,fontsize=14)
 
     # Add colorbar
     fig.add_colorbar()
@@ -396,7 +396,7 @@ def make_polmap(filename, title=None, figure=None, subplot=(1,1,1)):
 # In[7]:
 
 
-stokes_i, p, mask, fig = make_polmap(afile, title='A')
+stokes_i, p, mask, fig = make_polmap(afile)
 plt.savefig('figs/A_polmap.png',dpi=300)
 plt.savefig('figs/A_polmap.pdf',dpi=300)
 
@@ -434,10 +434,32 @@ plt.savefig('figs/A_pmap.png',dpi=300)
 
 
 files = [afile,cfile,dfile,efile]
-titles = ['A','C','D','E']
+titles = ['A (53 $\mu m$)',
+          'C (89 $\mu m$)',
+          'D (154 $\mu m$)',
+          'E (214 $\mu m$)']
 
+rows = []
 for file, title in zip(files,titles):
-    _,_,_,fig = make_polmap(file,title)
-    plt.savefig('figs/%s_polmap.pdf'%title,dpi=300)
-    plt.savefig('figs/%s_polmap.png'%title,dpi=300)
+    stokes_i,p,mask,fig = make_polmap(file,title)
+    plt.savefig('figs/%s_polmap.pdf'%title[0],dpi=300)
+    plt.savefig('figs/%s_polmap.png'%title[0],dpi=300)
 
+    rows.append((stokes_i,p,mask,fig))
+
+
+ncontours = [30,30,30,30]#[30,20,20,20]
+
+for row,title,cont in zip(rows,titles,ncontours):
+    stokes_i,p,_,_ = row
+
+    fig = FITSFigure(p)
+    fig.show_colorscale(cmap=cmap)
+    fig.show_contour(stokes_i,colors='gray',levels=cont,
+                     smooth=1,kernel='box',linewidths=0.3)
+    fig.add_colorbar()
+    fig.colorbar.set_axis_label_text('$p^\prime$ (%)')
+    fig.set_title(title,fontsize=14)
+    
+    plt.savefig('figs/%s_pmap.pdf'%title[0],dpi=300)
+    plt.savefig('figs/%s_pmap.png'%title[0],dpi=300)
