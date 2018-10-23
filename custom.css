@@ -30,6 +30,10 @@ a {
     background-color: #3bb3e9 !important;
 }
 
+.navbar-collapse li:hover >a.no-hover, a li a.active {
+    background-color: inherit !important;
+}
+
 .navbar-brand > img {
     margin-top:-15px !important;
     /*margin-left:200px;*/
@@ -51,21 +55,7 @@ a {
     background-color: inherit !important;
 }
 
-#site-title-head>li>a:hover {
-    background-color: inherit !important;
-    border-color: inherit !important;
-}
 
-#site-title-head>li>a:active {
-    background-color: inherit !important;
-    border-color: inherit !important;
-}
-
-#site-title-head>li>a:focus {
-    background-color: inherit !important;
-    border-color: inherit !important;
-}
-    
 
 .navbar-inverse .navbar-nav>li.site-title>a {
     margin-top:-8px;
@@ -132,6 +122,54 @@ a {
     font-style: normal !important;
     font-weight: 500 !important;
 }
+
+li#site-li-head.site-title:hover {
+    background-color: inherit !important;
+    border-color: inherit !important;
+}
+
+li#site-li-head.site-title:active {
+    background-color: inherit !important;
+    border-color: inherit !important;
+}
+
+li#site-li-head.site-title:focus {
+    background-color: inherit !important;
+    border-color: inherit !important;
+}
+
+li#site-li-head.site-title>a:hover {
+    background-color: inherit !important;
+    border-color: inherit !important;
+}
+
+li#site-li-head.site-title>a:active {
+    background-color: inherit !important;
+    border-color: inherit !important;
+}
+
+li#site-li-head.site-title>a:focus {
+    background-color: inherit !important;
+    border-color: inherit !important;
+}
+
+
+#site-title-head>li>a:hover {
+    background-color: inherit !important;
+    border-color: inherit !important;
+}
+
+#site-title-head>li>a:active {
+    background-color: inherit !important;
+    border-color: inherit !important;
+}
+
+#site-title-head>li>a:focus {
+    background-color: inherit !important;
+    border-color: inherit !important;
+}
+
+    
 
 button.navbar-toggle {
     border-color:#2b383e !important;

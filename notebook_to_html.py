@@ -55,9 +55,9 @@ NAV = '''
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="navbar-collapse-1">
       <ul class="nav navbar-nav navbar-left">
-        <li class="site-title" id="site-li-head">
-	  <a href="https://www.sofia.usra.edu">SOFIA Science Center</a>
-	  <a id="site-description" href="https://www.sofia.usra.edu">
+        <li class="site-title no-hover" id="site-li-head">
+	  <a href="https://www.sofia.usra.edu" class="no-hover">SOFIA Science Center</a>
+	  <a id="site-description" href="https://www.sofia.usra.edu" class="no-hover">
 	    Stratospheric Observatory for Infrared Astronomy
 	  </a>
 	</li>

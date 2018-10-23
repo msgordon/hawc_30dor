@@ -326,6 +326,9 @@ plt.savefig('figs/Stokes_Ip.png',dpi=300)
 from astropy.io import fits
 import numpy as np
 from aplpy import FITSFigure
+from scipy.signal import savgol_filter
+from scipy.interpolate import interp1d
+from scipy.stats import binned_statistic
 
 def make_polmap(filename, title=None, figure=None, subplot=(1,1,1)):
     hawc = fits.open(filename)
@@ -333,6 +336,7 @@ def make_polmap(filename, title=None, figure=None, subplot=(1,1,1)):
     theta = hawc['ROTATED POL ANGLE']   # deg
     stokes_i = hawc['STOKES I']         # I
     error_i = hawc['ERROR I']           # error I
+    error_p = hawc['ERROR PERCENT POL']
 
     # 1. plot Stokes I
     #  convert from Jy/pix to Jy/sq. arcsec
@@ -390,13 +394,13 @@ def make_polmap(filename, title=None, figure=None, subplot=(1,1,1)):
     fig.set_tick_labels_font(size='small')
     fig.set_axis_labels_font(size='small')
     
-    return stokes_i, p, mask, fig
+    return stokes_i, p, error_i, error_p, mask, fig
 
 
 # In[7]:
 
 
-stokes_i, p, mask, fig = make_polmap(afile)
+stokes_i, p, error_i, error_p, mask, fig = make_polmap(afile)
 plt.savefig('figs/A_polmap.png',dpi=300)
 plt.savefig('figs/A_polmap.pdf',dpi=300)
 
@@ -441,17 +445,17 @@ titles = ['A (53 $\mu m$)',
 
 rows = []
 for file, title in zip(files,titles):
-    stokes_i,p,mask,fig = make_polmap(file,title)
+    stokes_i,p,error_i,error_p,mask,fig = make_polmap(file,title)
     plt.savefig('figs/%s_polmap.pdf'%title[0],dpi=300)
     plt.savefig('figs/%s_polmap.png'%title[0],dpi=300)
 
-    rows.append((stokes_i,p,mask,fig))
+    rows.append((stokes_i,p,error_i,error_p,mask,fig))
 
 
 ncontours = [30,30,30,30]#[30,20,20,20]
 
 for row,title,cont in zip(rows,titles,ncontours):
-    stokes_i,p,_,_ = row
+    stokes_i,p,error_i,error_p,_,_ = row
 
     fig = FITSFigure(p)
     fig.show_colorscale(cmap=cmap)
@@ -463,3 +467,121 @@ for row,title,cont in zip(rows,titles,ncontours):
     
     plt.savefig('figs/%s_pmap.pdf'%title[0],dpi=300)
     plt.savefig('figs/%s_pmap.png'%title[0],dpi=300)
+
+
+plt.figure(figsize=(15,10),dpi=300)
+import matplotlib.gridspec as gridspec
+gs = gridspec.GridSpec(2,2)
+ax0 = plt.subplot(gs[0,0])
+ax1 = plt.subplot(gs[0,1])
+ax2 = plt.subplot(gs[1,0])
+ax3 = plt.subplot(gs[1,1])
+
+for row,title,ax in zip(rows,titles,(ax0,ax1,ax2,ax3)):
+    stokes_i,p,error_i,error_p,_,_ = row
+    snr_p = p.data/error_p.data
+    mask = np.where(snr_p < 3)
+
+    p.data[np.where(snr_p<0.5)] = np.nan
+
+    pcut = p.copy()
+    pcut.data[mask] = np.nan
+    
+    #plt.scatter(stokes_i.data.flatten(),pcut.data.flatten(),c=snr_p.flatten())
+    cbar = ax.scatter(stokes_i.data.flatten(),p.data.flatten(),c=snr_p.flatten())
+
+    # find envelope
+    order = np.argsort(stokes_i.data.flatten())
+    x = stokes_i.data.flatten()[order]
+    flat = pcut.data.flatten()[order]
+
+    idx = ~np.isnan(flat)
+    x = x[idx]
+    flat = flat[idx]
+
+    
+    bin_min, bin_edges, binnumber = binned_statistic(x,flat,
+                                                       statistic='min',
+                                                       bins=20)
+
+    bin_width = (bin_edges[1] - bin_edges[0])
+    bin_centers = bin_edges[1:] - bin_width/2
+
+    bin_min = savgol_filter(bin_min,7,3)
+
+    if title[0] == 'D':
+        idx = bin_centers<0.3
+        bin_centers = bin_centers[idx]
+        bin_min = bin_min[idx]
+    if title[0] == 'A':
+        idx = bin_centers<1
+        bin_centers = bin_centers[idx]
+        bin_min = bin_min[idx]
+        
+    ax.plot(bin_centers,bin_min,'C3')
+
+    
+    cax = plt.colorbar(cbar,ax=ax)
+    cax.ax.get_yaxis().labelpad = 15
+    cax.ax.set_ylabel('SNR$_{p^\prime}$')
+
+    if ax in (ax2,ax3):
+        ax.set_xlabel('Stokes I (Jy/arcsec$^2$)')
+    ax.set_ylabel('p$^\prime$ (%)')
+    ax.set_title(title)
+
+
+
+plt.savefig('figs/scatter.pdf',dpi=300)
+plt.savefig('figs/scatter.png',dpi=300)
+
+
+'''
+    #plt.scatter(stokes_i.data.flatten(),pcut.data.flatten(),c=snr_p.flatten())
+
+
+    ## find envelope
+    order = np.argsort(stokes_i.data.flatten())
+    x = stokes_i.data.flatten()[order]
+    flat = pcut.data.flatten()[order]
+
+    #idx = ~np.isnan(flat)
+    #x = x[idx]
+    #flat = flat[idx]
+
+    plt.close('all')
+    plt.figure()
+
+    dzero = pcut.data.copy()
+    dzero[np.isnan(dzero)] = 0
+    
+    plt.plot(x,p.data.flatten()[order]-dzero.flatten()[order])
+    #plt.plot(x,p.data.flatten()[order],ls='dashed')
+    plt.show()
+    exit()
+
+    l_x = [x[0],]
+    l_y = [flat[0],]
+
+    #Detect peaks and troughs and mark their location
+    for k in range(1,len(flat)-1):
+        if (np.sign(flat[k]-flat[k-1])==-1) and ((np.sign(flat[k]-flat[k+1]))==-1):
+            l_x.append(k)
+            l_y.append(flat[k])
+
+    l_x.append(x[-1])
+    l_y.append(flat[-1])
+
+    l_p = interp1d(l_x,l_y,kind='cubic',bounds_error = False, fill_value=0.0)
+
+    #Evaluate each model over the domain
+    q_l = l_p(x)
+    print(q_l)
+    
+    #flatten = flat[~np.isnan(flat)]
+    #signal = hilbert(np.array([float(x) for x in flatten]))
+    #signal = np.abs(signal)
+    
+
+    #plt.plot(stokes_i.data.flatten()[order],pcut.data.flatten()[order],c='C5')
+'''
